@@ -11,18 +11,23 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:a3afea7f3c972b809af1a79472585115af175fbf1bcc5bebccd495f19bb551db"
+  digest = "1:8f5fdb79a7a38f6b7dafbc47f620322f384a0cb06858cb28df0e5635e5bb4df4"
   name = "github.com/bitrise-io/go-steputils"
-  packages = ["stepconf"]
+  packages = [
+    "stepconf",
+    "tools",
+  ]
   pruneopts = "UT"
   revision = "f540824d77dfd382ce84fd0ee0a9da2fba1cce0a"
 
 [[projects]]
   branch = "master"
-  digest = "1:e64ca9b07b443a3fa0653fcf445756f95b65df163bdbdc4574091d8542dcf349"
+  digest = "1:0c55a25678195fcc9de56fa80a8a84d04ff70de03b8ab215f421c12bac6c0e6e"
   name = "github.com/bitrise-io/go-utils"
   packages = [
     "colorstring",
+    "command",
+    "errorutil",
     "fileutil",
     "log",
     "parseutil",
@@ -271,6 +276,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/bitrise-io/go-steputils/stepconf",
+    "github.com/bitrise-io/go-steputils/tools",
     "github.com/bitrise-io/go-utils/fileutil",
     "github.com/bitrise-io/go-utils/log",
     "github.com/bitrise-io/go-utils/pathutil",

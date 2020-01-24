@@ -14,8 +14,10 @@ import (
 )
 
 const (
-	releaseStatusCompleted  = "completed"
-	releaseStatusInProgress = "inProgress"
+	releaseStatusCompleted      = "completed"
+	releaseStatusInProgress     = "inProgress"
+	internalAppSharingName      = "internal-app-sharing"
+	internalAppSharingApkUrlKey = "BITRISE_APK_URL"
 )
 
 // uploadExpansionFiles uploads the expansion files for given applications, like .obb files.
@@ -119,6 +121,21 @@ func uploadAppApk(service *androidpublisher.Service, packageName string, appEdit
 	}
 	log.Infof("Uploaded apk version: %d", apk.VersionCode)
 	return apk, nil
+}
+
+func uploadInternalAppSharingApk(service *androidpublisher.Service, packageName string, appFile *os.File) (*androidpublisher.InternalAppSharingArtifact, error) {
+	log.Debugf("Uploading file %v with package name '%v' to internal app sharing", appFile, packageName)
+	internalAppSharingService := androidpublisher.NewInternalappsharingartifactsService(service)
+
+	uploadApkCall := internalAppSharingService.Uploadapk(packageName)
+	uploadApkCall.Media(appFile, googleapi.ContentType("application/vnd.android.package-archive"))
+
+	artifact, err := uploadApkCall.Do()
+	if err != nil {
+		return &androidpublisher.InternalAppSharingArtifact{}, fmt.Errorf("failed to upload apk, error: %s", err)
+	}
+	log.Infof("Uploaded internal app sharing APK to %s", artifact.DownloadUrl)
+	return artifact, nil
 }
 
 // updates the listing info of a given release.

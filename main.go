@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/bitrise-io/go-steputils/stepconf"
+	"github.com/bitrise-io/go-steputils/tools"
 	"github.com/bitrise-io/go-utils/log"
 	"google.golang.org/api/androidpublisher/v3"
 	"google.golang.org/api/option"
@@ -115,35 +116,7 @@ func updateTracks(configs Configs, service *androidpublisher.Service, appEdit *a
 	return nil
 }
 
-func main() {
-	//
-	// Getting configs
-	fmt.Println()
-	log.Infof("Getting configuration")
-	var configs Configs
-	if err := stepconf.Parse(&configs); err != nil {
-		failf("Couldn't create config: %s\n", err)
-	}
-	stepconf.Print(configs)
-	if err := configs.validate(); err != nil {
-		failf(err.Error())
-	}
-	log.Donef("Configuration read successfully")
-
-	//
-	// Create client and service
-	fmt.Println()
-	log.Infof("Authenticating")
-	client, err := createHTTPClient(string(configs.JSONKeyPath))
-	if err != nil {
-		failf("Failed to create HTTP client: %v", err)
-	}
-	service, err := androidpublisher.NewService(context.TODO(), option.WithHTTPClient(client))
-	if err != nil {
-		failf("Failed to create publisher service, error: %s", err)
-	}
-	log.Donef("Authenticated client created")
-
+func trackFlow(configs Configs, service *androidpublisher.Service) {
 	//
 	// Create insert edit
 	fmt.Println()
@@ -195,4 +168,62 @@ func main() {
 	}
 
 	log.Donef("Edit committed")
+}
+
+func internalAppSharingFlow(configs Configs, service *androidpublisher.Service) {
+	//
+	// Upload APK
+	fmt.Println()
+	log.Infof("Uploading internal app sharing APK")
+
+	appPaths, _ := configs.appPaths()
+	appPath := appPaths[0]
+	appFile, err := os.Open(appPath)
+	if err != nil {
+		fmt.Errorf("failed to open app (%s), error: %s", appPath, err)
+	}
+
+	artifact, err := uploadInternalAppSharingApk(service, configs.PackageName, appFile)
+	if err != nil {
+		tools.ExportEnvironmentWithEnvman(internalAppSharingApkUrlKey, artifact.DownloadUrl)
+		log.Donef("APK uploaded to %s", artifact.DownloadUrl)
+	} else {
+		failf("Failed to upload APK %s, error: %s", appFile, err)
+	}
+}
+
+func main() {
+	//
+	// Getting configs
+	fmt.Println()
+	log.Infof("Getting configuration")
+	var configs Configs
+	if err := stepconf.Parse(&configs); err != nil {
+		failf("Couldn't create config: %s\n", err)
+	}
+	stepconf.Print(configs)
+	if err := configs.validate(); err != nil {
+		failf(err.Error())
+	}
+	log.Donef("Configuration read successfully")
+
+	//
+	// Create client and service
+	fmt.Println()
+	log.Infof("Authenticating")
+	client, err := createHTTPClient(string(configs.JSONKeyPath))
+	if err != nil {
+		failf("Failed to create HTTP client: %v", err)
+	}
+	service, err := androidpublisher.NewService(context.TODO(), option.WithHTTPClient(client))
+	if err != nil {
+		failf("Failed to create publisher service, error: %s", err)
+	}
+	log.Donef("Authenticated client created")
+
+	if configs.Track == internalAppSharingName {
+		internalAppSharingFlow(configs, service)
+	} else {
+		trackFlow(configs, service)
+	}
 }
