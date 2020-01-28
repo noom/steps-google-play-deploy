@@ -185,10 +185,10 @@ func internalAppSharingFlow(configs Configs, service *androidpublisher.Service) 
 
 	artifact, err := uploadInternalAppSharingApk(service, configs.PackageName, appFile)
 	if err != nil {
+		failf("Failed to upload APK %s, error: %s", appFile, err)
+	} else {
 		tools.ExportEnvironmentWithEnvman(internalAppSharingApkUrlKey, artifact.DownloadUrl)
 		log.Donef("APK uploaded to %s", artifact.DownloadUrl)
-	} else {
-		failf("Failed to upload APK %s, error: %s", appFile, err)
 	}
 }
 
