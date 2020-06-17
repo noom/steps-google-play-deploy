@@ -122,7 +122,7 @@ func trackFlow(configs Configs, service *androidpublisher.Service) {
 	fmt.Println()
 	log.Infof("Create new edit")
 	editsService := androidpublisher.NewEditsService(service)
-	editsInsertCall := editsService.Insert(configs.PackageName, nil)
+	editsInsertCall := editsService.Insert(configs.PackageName, &androidpublisher.AppEdit{})
 	appEdit, err := editsInsertCall.Do()
 	if err != nil {
 		failf("Failed to perform edit insert call, error: %s", err)
